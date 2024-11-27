@@ -5,6 +5,9 @@ from selenium.webdriver.common.by import By
 import time
 from selenium.webdriver.support import expected_conditions as ec
 
+from src.Pages.add_news_page import add_news_page
+
+
 def add_inactive_post():
     driver = webdriver.Chrome()
     driver.get("https://e-school.ge/?m=new&sm=new_new")
@@ -26,9 +29,9 @@ def add_inactive_post():
     driver.execute_script('window.scrollBy(0,200)')
     time.sleep(2)
 
-    add_news = driver.find_element(By.XPATH, '/html/body/div[2]/div[1]/nav/ul/li[18]/a/div[2]')
-    add_news.click()
-    time.sleep(3)
+    add_news_page(driver)
+
+
 
     add_news_button = driver.find_element(By.XPATH, '/html/body/div[2]/div[2]/div[1]/div/a')
     add_news_button.click()

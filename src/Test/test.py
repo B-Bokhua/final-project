@@ -5,6 +5,9 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.common.action_chains import ActionChains
+
+from src.Pages.admin_page import admin_page
+from src.Pages.news_page import news_page
 from src.utils.add_first_post import add_first_post
 from src.utils.add_second_post import add_second_post
 from src.utils.add_inactive_post import add_inactive_post
@@ -87,16 +90,9 @@ def navigate_teacher_to_news_section(driver):
     time.sleep(2)
 
 def navigate_admin_profile_to_news_section(driver):
-    admin_profile = driver.find_element(By.XPATH, '//*[@name="choose_admin"]')
-    admin_profile.click()
+    admin_page(driver)
     time.sleep(2)
-
-    driver.execute_script('window.scrollBy(0,200)')
-    time.sleep(2)
-
-    news_button = driver.find_element(By.XPATH, '/html/body/div[2]/div[1]/nav/ul/li[19]/a')
-    news_button.click()
-    time.sleep(2)
+    news_page(driver)
 
 
 
