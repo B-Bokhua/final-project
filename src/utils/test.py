@@ -6,6 +6,9 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.common.action_chains import ActionChains
 
+from src.utils.droebiti import driver
+
+
 @pytest.fixture(scope="module")
 def setup_driver():
     driver = webdriver.Chrome()
@@ -23,6 +26,7 @@ def login_as_kids(driver):
     enter_button_1.click()
     time.sleep(2)
 
+
 def log_out(driver):
     profile_name = driver.find_element(By.XPATH, '//div[@class="header-profile-name"]')
     actions = ActionChains(driver)
@@ -34,7 +38,7 @@ def log_out(driver):
     logout_option.click()
     time.sleep(2)
 
-    WebDriverWait(driver, 10).until(ec.presence_of_element_located((By.XPATH, '//*[@value="ავტორიზაცია"]')))
+    WebDriverWait(driver, 2).until(ec.presence_of_element_located((By.XPATH, '//*[@value="ავტორიზაცია"]')))
 
     time.sleep(2)
 
@@ -84,11 +88,12 @@ def navigate_teacher_to_news_section(driver):
 def navigate_admin_profile_to_news_section(driver):
     admin_profile = driver.find_element(By.XPATH, '//*[@name="choose_admin"]')
     admin_profile.click()
+    time.sleep(2)
 
     driver.execute_script('window.scrollBy(0,200)')
-    time.sleep(4)
+    time.sleep(2)
 
-    news_button = WebDriverWait(driver, 10).until(ec.element_to_be_clickable((By.XPATH, '/html/body/div[2]/div[1]/nav/ul/li[19]/a')))
+    news_button = driver.find_element(By.XPATH, '/html/body/div[2]/div[1]/nav/ul/li[19]/a')
     news_button.click()
     time.sleep(2)
 
@@ -105,6 +110,8 @@ def test_first_news_is_visible(setup_driver):
 
     assert visible_news in visible_news_titles, f"'{visible_news}' should be visible to kids!"
 
+    log_out(driver)
+
 @pytest.mark.usefixtures("setup_driver")
 def test_second_news_is_not_visible(setup_driver):
     driver = setup_driver
@@ -117,11 +124,11 @@ def test_second_news_is_not_visible(setup_driver):
 
     assert hidden_news not in visible_news_titles, f"'{hidden_news}' should NOT be visible to kids!"
 
+    log_out(driver)
+
 @pytest.mark.usefixtures("setup_driver")
 def test_both_is_visible_for_teacher(setup_driver):
     driver = setup_driver
-
-    log_out(driver)
 
     login_as_teacher(driver)
     navigate_teacher_to_news_section(driver)
@@ -135,24 +142,84 @@ def test_both_is_visible_for_teacher(setup_driver):
     assert first_news in first_news_title, f"'{first_news}' should be visible to the teacher!"
     assert second_news in second_news_title, f"'{second_news}' should be visible to the teacher!"
 
-
-@pytest.mark.usefixtures("setup_driver")
-def test_both_is_visible_for_admin(setup_driver):
-    driver = setup_driver
     log_out(driver)
+
+
+
+def test_both_is_visible_for_admin(setup_driver):
+
+    driver = webdriver.Chrome()
+    driver.get("https://e-school.ge/?m=new&sm=new_new")
+    driver.maximize_window()
 
     login_as_admin(driver)
     navigate_admin_profile_to_news_section(driver)
-    time.sleep(7)
+    time.sleep(3)
 
     first_news = "პირველი სიახლე"
     second_news = "მეორე სიახლე"
 
-    first_news_title = [title.text for title in driver.find_elements(By.XPATH, '/html/body/div[2]/div[2]/div/div[1]/div/div/div[4]/a/h2)')]
+    time.sleep(2)
+
+    first_news_title = [title.text for title in driver.find_elements(By.XPATH, '/html/body/div[2]/div[2]/div/div[1]/div/div/div[4]/a/h2')]
     second_news_title = [title.text for title in driver.find_elements(By.XPATH, '/html/body/div[2]/div[2]/div/div[1]/div/div/div[1]/a/h2')]
 
     assert first_news in first_news_title, f"'{first_news}' should be visible to the admin!"
     assert second_news in second_news_title, f"'{second_news}' should be visible to the admin!"
+
+def test_picture_title_text(setup_driver):
+    driver = webdriver.Chrome()
+    driver.get("https://e-school.ge/?m=new&sm=new_new")
+    driver.maximize_window()
+
+    login_as_admin(driver)
+    navigate_admin_profile_to_news_section(driver)
+    time.sleep(3)
+
+    title_name = "მეორე სიახლე"
+    text = "ახალი ამბავი მოხდა..."
+    image_style = ('background: url("uploads/news/6745adfa02391.jpg") center center / cover '
+ 'no-repeat;')
+
+
+    title_name_from_dom = driver.find_element(By.XPATH, '/html/body/div[2]/div[2]/div/div[1]/div/div/div[1]/a/h2').text
+    assert title_name_from_dom == title_name
+
+    text_name_from_dom = driver.find_element(By.XPATH, '/html/body/div[2]/div[2]/div/div[1]/div/div/div[1]/a/div[2]/p').text
+    assert text == text_name_from_dom
+
+    image_dom = driver.find_element(By.XPATH, '/html/body/div[2]/div[2]/div/div[1]/div/div/div[1]/a/div[1]')
+    image_style_dom = image_dom.get_attribute("style")
+    assert image_style_dom == image_style
+    log_out(driver)
+    driver.quit()
+
+def test_inactive_post():
+    driver = webdriver.Chrome()
+    driver.get("https://e-school.ge/?m=new&sm=new_new")
+    driver.maximize_window()
+
+    login_as_admin(driver)
+    admin_profile = driver.find_element(By.XPATH, '//*[@name="choose_admin"]')
+    admin_profile.click()
+
+    time.sleep(3)
+    driver.execute_script('window.scrollBy(0,200)')
+    time.sleep(2)
+
+    add_news_button = driver.find_element(By.XPATH, '/html/body/div[2]/div[1]/nav/ul/li[18]/a')
+    add_news_button.click()
+    time.sleep(2)
+
+    inactive_text = "არააქტიური"
+
+    inactive_span_text = driver.find_element(By.XPATH,'/html/body/div[2]/div[2]/div[2]/div/table/tbody/tr[1]/td[5]/span').text
+    assert inactive_text == inactive_span_text
+
+
+
+
+
 
 
 
