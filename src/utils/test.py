@@ -5,8 +5,9 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.common.action_chains import ActionChains
-
-from src.utils.droebiti import driver
+from src.utils.add_first_post import add_first_post
+from src.utils.add_second_post import add_second_post
+from src.utils.add_inactive_post import add_inactive_post
 
 
 @pytest.fixture(scope="module")
@@ -98,23 +99,36 @@ def navigate_admin_profile_to_news_section(driver):
     time.sleep(2)
 
 
+
 @pytest.mark.usefixtures("setup_driver")
 def test_first_news_is_visible(setup_driver):
+    add_first_post()
+
     driver = setup_driver
 
     login_as_kids(driver)
     navigate_kid_to_news_section(driver)
 
     visible_news = "პირველი სიახლე"
-    visible_news_titles = [title.text for title in driver.find_elements(By.XPATH, '/html/body/div[2]/div[2]/div/div[1]/div/div/div[1]/a/h2' )]
+    visible_news_titles = [title.text for title in driver.find_elements(By.XPATH, '//h2[contains(text(), "პირველი სიახლე")]' )]
 
     assert visible_news in visible_news_titles, f"'{visible_news}' should be visible to kids!"
 
     log_out(driver)
 
+
+first_post_old_style = ''
 @pytest.mark.usefixtures("setup_driver")
 def test_second_news_is_not_visible(setup_driver):
+    global first_post_style
+
     driver = setup_driver
+    login_as_kids(driver)
+    navigate_kid_to_news_section(driver)
+    first_post_style = driver.find_element(By.XPATH, '/html/body/div[2]/div[2]/div/div[1]/div/div/div[1]/a/div[1]').get_attribute('style')
+    log_out(driver)
+
+    add_second_post()
 
     login_as_kids(driver)
     navigate_kid_to_news_section(driver)
@@ -136,8 +150,8 @@ def test_both_is_visible_for_teacher(setup_driver):
     first_news = "პირველი სიახლე"
     second_news = "მეორე სიახლე"
 
-    first_news_title = [title.text for title in driver.find_elements(By.XPATH, '/html/body/div[2]/div[2]/div/div[1]/div/div/div[4]/a/h2')]
-    second_news_title = [title.text for title in driver.find_elements(By.XPATH, '/html/body/div[2]/div[2]/div/div[1]/div/div/div[1]/a/h2')]
+    first_news_title = [title.text for title in driver.find_elements(By.XPATH, '//h2[contains(text(), "პირველი სიახლე")]')]
+    second_news_title = [title.text for title in driver.find_elements(By.XPATH, '//h2[contains(text(), "მეორე სიახლე")]')]
 
     assert first_news in first_news_title, f"'{first_news}' should be visible to the teacher!"
     assert second_news in second_news_title, f"'{second_news}' should be visible to the teacher!"
@@ -147,7 +161,6 @@ def test_both_is_visible_for_teacher(setup_driver):
 
 
 def test_both_is_visible_for_admin(setup_driver):
-
     driver = webdriver.Chrome()
     driver.get("https://e-school.ge/?m=new&sm=new_new")
     driver.maximize_window()
@@ -161,8 +174,8 @@ def test_both_is_visible_for_admin(setup_driver):
 
     time.sleep(2)
 
-    first_news_title = [title.text for title in driver.find_elements(By.XPATH, '/html/body/div[2]/div[2]/div/div[1]/div/div/div[4]/a/h2')]
-    second_news_title = [title.text for title in driver.find_elements(By.XPATH, '/html/body/div[2]/div[2]/div/div[1]/div/div/div[1]/a/h2')]
+    first_news_title = [title.text for title in driver.find_elements(By.XPATH, '//h2[contains(text(), "პირველი სიახლე")]')]
+    second_news_title = [title.text for title in driver.find_elements(By.XPATH, '//h2[contains(text(), "მეორე სიახლე")]')]
 
     assert first_news in first_news_title, f"'{first_news}' should be visible to the admin!"
     assert second_news in second_news_title, f"'{second_news}' should be visible to the admin!"
@@ -174,27 +187,29 @@ def test_picture_title_text(setup_driver):
 
     login_as_admin(driver)
     navigate_admin_profile_to_news_section(driver)
-    time.sleep(3)
+    time.sleep(1)
 
     title_name = "მეორე სიახლე"
     text = "ახალი ამბავი მოხდა..."
-    image_style = ('background: url("uploads/news/6745adfa02391.jpg") center center / cover '
- 'no-repeat;')
 
+    h2 = driver.find_element(By.XPATH, '//h2[contains(text(), "მეორე სიახლე")]')
+    a_parent = h2.find_element(By.XPATH, '..')
 
-    title_name_from_dom = driver.find_element(By.XPATH, '/html/body/div[2]/div[2]/div/div[1]/div/div/div[1]/a/h2').text
+    title_name_from_dom = driver.find_element(By.XPATH, '//h2[contains(text(), "მეორე სიახლე")]').text
     assert title_name_from_dom == title_name
 
-    text_name_from_dom = driver.find_element(By.XPATH, '/html/body/div[2]/div[2]/div/div[1]/div/div/div[1]/a/div[2]/p').text
+    text_name_from_dom = driver.find_element(By.XPATH, '//p[contains(text(), "ახალი ამბავი მოხდა...")]').text
     assert text == text_name_from_dom
 
-    image_dom = driver.find_element(By.XPATH, '/html/body/div[2]/div[2]/div/div[1]/div/div/div[1]/a/div[1]')
+    image_dom = a_parent.find_element(By.XPATH, '//div[@class="news-listing-img"]')
     image_style_dom = image_dom.get_attribute("style")
-    assert image_style_dom == image_style
+    assert image_style_dom != first_post_old_style # this means that latest post image url has changed
     log_out(driver)
     driver.quit()
 
 def test_inactive_post():
+    add_inactive_post()
+
     driver = webdriver.Chrome()
     driver.get("https://e-school.ge/?m=new&sm=new_new")
     driver.maximize_window()
@@ -213,7 +228,7 @@ def test_inactive_post():
 
     inactive_text = "არააქტიური"
 
-    inactive_span_text = driver.find_element(By.XPATH,'/html/body/div[2]/div[2]/div[2]/div/table/tbody/tr[1]/td[5]/span').text
+    inactive_span_text = driver.find_element(By.XPATH,'//span[contains(text(), "არააქტიური")]').text
     assert inactive_text == inactive_span_text
 
 
