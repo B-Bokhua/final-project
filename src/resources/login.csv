@@ -1,4 +1,6 @@
-Role,Username,Password
-Admin,tap@gmail.com,123
-Teacher,tap@gmail.com,123
-Kid,kid4@gmail.com,123
+role,email,password
+kid,kid4@gmail.com,123
+teacher,tap@gmail.com,123
+admin,tap@gmail.com,123
+parent,tap@gmail.com,123
+
