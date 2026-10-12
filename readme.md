@@ -1,4 +1,4 @@
-# Final Project
+# Final E-school Project
 
 ### Description
 To summarize this project goes throught the flow and tests these actions
